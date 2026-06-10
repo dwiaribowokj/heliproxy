@@ -297,3 +297,7 @@ docker build -t heliproxy:latest .
 - Dashboard changes disappear: verify the mounted data directory is writable by the container and check `docker logs heliproxy`.
 - Usage refresh fails but RPC works: verify `project_id` and Helius Admin API availability for that project.
 - `429` from Helius: add more upstream keys, increase cooldown, or reduce client request volume.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
