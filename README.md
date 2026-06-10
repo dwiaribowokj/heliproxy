@@ -103,6 +103,19 @@ HELIUS_PROJECT_IDS=project1,project2,project3
 HELIUS_KEY_NAMES=helius-1,helius-2,helius-3
 ```
 
+
+## Safe Local Redeploy
+
+For this host, prefer the guarded deploy script instead of ad-hoc `docker run` commands:
+
+```bash
+./scripts/deploy_heliproxy_safe.sh
+```
+
+It builds the image, recreates the container with both required ports (`18081` HTTP and `18082` WebSocket), mounts the runtime config directory, runs as the host user for `config.yaml` permissions, and verifies both `/healthz` and a WebSocket `slotSubscribe`.
+
+See [`docs/runbooks/safe-deploy.md`](docs/runbooks/safe-deploy.md) for the full runbook.
+
 ## Local Docker Deploy
 
 1. Clone and enter the repo:
