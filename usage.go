@@ -17,6 +17,8 @@ type ProjectUsage struct {
 	PrepaidCreditsUsed      float64                    `json:"prepaidCreditsUsed"`
 	SubscriptionDetails     AdminSubscriptionDetails   `json:"subscriptionDetails"`
 	Usage                   map[string]float64         `json:"usage"`
+	Estimate                bool                       `json:"estimate,omitempty"`
+	Note                    string                     `json:"note,omitempty"`
 	Raw                     map[string]json.RawMessage `json:"-"`
 }
 
@@ -84,9 +86,15 @@ func (c *UsageClient) GetProjectUsage(ctx context.Context, apiKey, projectID str
 		var body map[string]any
 		_ = json.NewDecoder(resp.Body).Decode(&body)
 		if msg, ok := body["message"].(string); ok && msg != "" {
+			if isMissingBillingPeriodError(msg) {
+				return freePlanUsageFallback(msg), nil
+			}
 			return nil, fmt.Errorf("helius admin api %d: %s", resp.StatusCode, msg)
 		}
 		if errText, ok := body["error"].(string); ok && errText != "" {
+			if isMissingBillingPeriodError(errText) {
+				return freePlanUsageFallback(errText), nil
+			}
 			return nil, fmt.Errorf("helius admin api %d: %s", resp.StatusCode, errText)
 		}
 		return nil, fmt.Errorf("helius admin api %d", resp.StatusCode)
@@ -97,6 +105,24 @@ func (c *UsageClient) GetProjectUsage(ctx context.Context, apiKey, projectID str
 		return nil, err
 	}
 	return &usage, nil
+}
+
+func isMissingBillingPeriodError(message string) bool {
+	return strings.Contains(strings.ToLower(message), "without billing period start")
+}
+
+func freePlanUsageFallback(reason string) *ProjectUsage {
+	return &ProjectUsage{
+		CreditsRemaining: -1,
+		CreditsUsed:      -1,
+		SubscriptionDetails: AdminSubscriptionDetails{
+			CreditsLimit: 1000000,
+			Plan:         "Free",
+		},
+		Usage:    map[string]float64{},
+		Estimate: true,
+		Note:     "Helius Admin API belum menyediakan billing cycle/used credits untuk project ini. Free plan limit: 1M credits/bulan. Reason: " + reason,
+	}
 }
 
 func (a *App) refreshUsage(ctx context.Context) []UsageRefreshResult {

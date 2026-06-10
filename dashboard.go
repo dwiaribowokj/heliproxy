@@ -22,131 +22,226 @@ const dashboardHTML = `<!doctype html>
   <style>
     :root {
       color-scheme: light dark;
-      --bg: #f7f8fa;
-      --surface: #ffffff;
-      --line: #d8dde5;
-      --text: #151922;
-      --muted: #5d6675;
+      --bg: #f5f7fb;
+      --bg-soft: #eef7f5;
+      --surface: rgba(255, 255, 255, .86);
+      --surface-strong: #ffffff;
+      --line: #dce3ee;
+      --text: #111827;
+      --muted: #64748b;
       --accent: #0f766e;
+      --accent-2: #14b8a6;
       --danger: #b42318;
       --warn: #a15c00;
       --ok: #087443;
-      --code: #eef2f6;
+      --code: #eef2f7;
+      --shadow: 0 18px 55px rgba(15, 23, 42, .12);
+      --shadow-soft: 0 10px 30px rgba(15, 23, 42, .07);
+      --radius: 18px;
     }
     @media (prefers-color-scheme: dark) {
       :root {
-        --bg: #101318;
-        --surface: #171b22;
-        --line: #303744;
+        --bg: #090d14;
+        --bg-soft: #0b1718;
+        --surface: rgba(17, 24, 39, .78);
+        --surface-strong: #111827;
+        --line: #263244;
         --text: #eef2f7;
-        --muted: #a7b0bf;
+        --muted: #9aa8bd;
         --accent: #2dd4bf;
+        --accent-2: #5eead4;
         --danger: #ff8a80;
         --warn: #fbbf24;
         --ok: #34d399;
-        --code: #202631;
+        --code: #151d2a;
+        --shadow: 0 18px 55px rgba(0, 0, 0, .42);
+        --shadow-soft: 0 10px 30px rgba(0, 0, 0, .25);
       }
     }
     * { box-sizing: border-box; }
     body {
       margin: 0;
+      min-height: 100vh;
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: var(--bg);
+      background:
+        radial-gradient(circle at top left, color-mix(in srgb, var(--accent-2) 20%, transparent), transparent 34rem),
+        radial-gradient(circle at top right, rgba(20, 184, 166, .13), transparent 30rem),
+        linear-gradient(180deg, var(--bg-soft), var(--bg) 34rem);
       color: var(--text);
       letter-spacing: 0;
     }
     header {
-      border-bottom: 1px solid var(--line);
-      background: var(--surface);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      border-bottom: 1px solid color-mix(in srgb, var(--line) 75%, transparent);
+      background: color-mix(in srgb, var(--surface) 92%, transparent);
+      backdrop-filter: blur(16px);
     }
     main, .bar {
-      max-width: 1180px;
+      max-width: 1240px;
       margin: 0 auto;
       padding: 18px;
     }
+    main { padding-bottom: 108px; }
     .bar {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 16px;
+      gap: 18px;
     }
-    h1 { margin: 0; font-size: 22px; line-height: 1.2; }
-    h2 { margin: 0 0 12px; font-size: 16px; }
-    .sub { color: var(--muted); font-size: 13px; margin-top: 4px; }
-    .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    h1 { margin: 0; font-size: 23px; line-height: 1.15; letter-spacing: -.03em; }
+    h2 { margin: 0 0 12px; font-size: 16px; letter-spacing: -.01em; }
+    .sub { color: var(--muted); font-size: 13px; margin-top: 5px; }
+    .brand-row { display: flex; align-items: center; gap: 11px; }
+    .logo-mark {
+      width: 40px;
+      height: 40px;
+      display: grid;
+      place-items: center;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: white;
+      font-weight: 900;
+      box-shadow: var(--shadow-soft);
+    }
+    .actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
     button {
       border: 1px solid var(--line);
-      background: var(--surface);
+      background: var(--surface-strong);
       color: var(--text);
-      height: 34px;
-      padding: 0 12px;
-      border-radius: 6px;
+      height: 36px;
+      padding: 0 13px;
+      border-radius: 10px;
       cursor: pointer;
-      font-weight: 600;
+      font-weight: 700;
+      transition: transform .15s ease, border-color .15s ease, background .15s ease, box-shadow .15s ease;
     }
-    button.primary { background: var(--accent); border-color: var(--accent); color: #ffffff; }
+    button:hover:not(:disabled) { transform: translateY(-1px); border-color: color-mix(in srgb, var(--accent) 42%, var(--line)); box-shadow: var(--shadow-soft); }
+    button.primary { background: linear-gradient(135deg, var(--accent), var(--accent-2)); border-color: transparent; color: #ffffff; }
     button.danger { color: var(--danger); }
-    button:disabled { opacity: .55; cursor: not-allowed; }
+    button.big { height: 42px; padding: 0 18px; border-radius: 999px; }
+    button:disabled { opacity: .52; cursor: not-allowed; }
     section {
       background: var(--surface);
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 16px;
+      border: 1px solid color-mix(in srgb, var(--line) 84%, transparent);
+      border-radius: var(--radius);
+      padding: 18px;
       margin: 16px 0;
+      box-shadow: var(--shadow-soft);
+      backdrop-filter: blur(12px);
     }
+    .section-head { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; margin-bottom: 14px; }
+    .section-head h2 { margin-bottom: 5px; }
+    .hint { color: var(--muted); font-size: 13px; line-height: 1.45; }
+    .dirty-card { border-color: color-mix(in srgb, var(--accent) 42%, var(--line)); box-shadow: inset 4px 0 0 var(--accent), var(--shadow-soft); }
     .grid {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 12px;
     }
-    .metric { border: 1px solid var(--line); border-radius: 8px; padding: 12px; }
-    .metric .label { color: var(--muted); font-size: 12px; }
-    .metric .value { font-size: 24px; font-weight: 700; margin-top: 4px; }
-    .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; }
+    .metric {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px;
+      background: linear-gradient(180deg, color-mix(in srgb, var(--surface-strong) 90%, transparent), color-mix(in srgb, var(--surface) 86%, transparent));
+    }
+    .metric:before {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 4px;
+      background: linear-gradient(180deg, var(--accent), var(--accent-2));
+      opacity: .78;
+    }
+    .metric .label { color: var(--muted); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+    .metric .value { font-size: 27px; font-weight: 800; margin-top: 6px; letter-spacing: -.04em; }
+    .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 14px; background: var(--surface-strong); }
     table { width: 100%; border-collapse: collapse; min-width: 820px; }
-    th, td { padding: 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; font-size: 13px; }
-    th { color: var(--muted); font-size: 12px; font-weight: 700; background: color-mix(in srgb, var(--surface) 88%, var(--line)); position: sticky; top: 0; }
+    th, td { padding: 12px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; font-size: 13px; }
+    th { color: var(--muted); font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; background: color-mix(in srgb, var(--surface-strong) 88%, var(--line)); position: sticky; top: 0; }
     tr:last-child td { border-bottom: 0; }
+    tbody tr:hover { background: color-mix(in srgb, var(--accent) 5%, transparent); }
     input, textarea {
       width: 100%;
-      min-height: 34px;
+      min-height: 36px;
       border: 1px solid var(--line);
-      border-radius: 6px;
-      background: var(--surface);
+      border-radius: 10px;
+      background: var(--surface-strong);
       color: var(--text);
-      padding: 7px 9px;
+      padding: 8px 10px;
       font: inherit;
+      outline: none;
+      transition: border-color .15s ease, box-shadow .15s ease;
     }
-    textarea { min-height: 72px; resize: vertical; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
-    label { display: block; color: var(--muted); font-size: 12px; margin-bottom: 5px; }
-    .form-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    input:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent); }
+    textarea { min-height: 76px; resize: vertical; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    label { display: block; color: var(--muted); font-size: 12px; font-weight: 700; margin-bottom: 6px; }
+    .form-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
     .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
-    .pill { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 999px; font-size: 12px; border: 1px solid var(--line); }
+    .pill { display: inline-flex; align-items: center; min-height: 24px; padding: 0 9px; border-radius: 999px; font-size: 12px; font-weight: 800; border: 1px solid currentColor; background: color-mix(in srgb, currentColor 9%, transparent); }
     .ok { color: var(--ok); }
     .warn { color: var(--warn); }
     .bad { color: var(--danger); }
     .muted { color: var(--muted); }
     .row-actions { display: flex; gap: 6px; }
-    pre { background: var(--code); padding: 12px; border-radius: 8px; overflow: auto; min-height: 80px; }
+    pre { background: var(--code); padding: 13px; border-radius: 14px; overflow: auto; min-height: 80px; border: 1px solid var(--line); }
+    .save-dock {
+      position: fixed;
+      left: 50%;
+      bottom: 18px;
+      transform: translate(-50%, 120%);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: min(92vw, 590px);
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--surface-strong) 92%, transparent);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+      opacity: 0;
+      pointer-events: none;
+      transition: transform .2s ease, opacity .2s ease;
+      z-index: 20;
+    }
+    .save-dock.visible { transform: translate(-50%, 0); opacity: 1; pointer-events: auto; }
+    .save-dock .save-copy { flex: 1; min-width: 0; }
+    .save-title { font-size: 13px; font-weight: 800; }
+    .save-detail { font-size: 12px; color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .unsaved-badge { display: none; margin-left: 8px; color: var(--warn); font-size: 12px; font-weight: 800; }
+    .unsaved-badge.visible { display: inline; }
+    @media (max-width: 900px) {
+      .grid, .form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
     @media (max-width: 760px) {
       .bar { align-items: flex-start; flex-direction: column; }
+      .actions { justify-content: flex-start; }
       .grid, .form-grid { grid-template-columns: 1fr; }
       main, .bar { padding: 14px; }
+      .save-dock { border-radius: 18px; align-items: stretch; flex-direction: column; }
+      .save-dock button { width: 100%; }
     }
   </style>
 </head>
 <body>
   <header>
     <div class="bar">
-      <div>
-        <h1>Heliproxy</h1>
-        <div class="sub">Helius-compatible RPC proxy with sticky round-robin key rotation.</div>
+      <div class="brand-row">
+        <div class="logo-mark">H</div>
+        <div>
+          <h1>Heliproxy</h1>
+          <div class="sub">Helius-compatible RPC proxy with sticky round-robin key rotation.</div>
+        </div>
       </div>
       <div class="actions">
         <button id="refreshBtn">Refresh</button>
         <button id="usageBtn">Refresh Usage</button>
         <button id="testBtn">Test RPC</button>
-        <button id="saveBtn" class="primary">Save Config</button>
+        <button id="saveBtn" class="primary" disabled>Saved</button>
       </div>
     </div>
   </header>
@@ -175,8 +270,13 @@ const dashboardHTML = `<!doctype html>
       </div>
     </section>
 
-    <section>
-      <h2>Config</h2>
+    <section id="configSection">
+      <div class="section-head">
+        <div>
+          <h2>Config <span id="configDirtyBadge" class="unsaved-badge">Unsaved changes</span></h2>
+          <div class="hint">Ubah setting di sini. Tombol save akan aktif dan muncul mengambang hanya kalau ada perubahan yang perlu disimpan.</div>
+        </div>
+      </div>
       <div class="form-grid">
         <div><label>Listen Host</label><input id="serverHost"></div>
         <div><label>Listen Port</label><input id="serverPort" type="number" min="1" max="65535"></div>
@@ -201,8 +301,13 @@ const dashboardHTML = `<!doctype html>
       </div>
     </section>
 
-    <section>
-      <h2>Edit Helius Keys</h2>
+    <section id="keysSection">
+      <div class="section-head">
+        <div>
+          <h2>Edit Helius Keys <span id="keysDirtyBadge" class="unsaved-badge">Unsaved changes</span></h2>
+          <div class="hint">Untuk key lama, kosongkan kolom API Key kalau tidak ingin mengganti secret. Project ID opsional, tapi diperlukan untuk usage/billing display.</div>
+        </div>
+      </div>
       <div class="table-wrap">
         <table>
           <thead>
@@ -224,12 +329,22 @@ const dashboardHTML = `<!doctype html>
       <pre id="output">Loading...</pre>
     </section>
   </main>
+  <div id="saveDock" class="save-dock" role="status" aria-live="polite">
+    <div class="save-copy">
+      <div class="save-title">Ada perubahan config belum disimpan</div>
+      <div id="saveDetail" class="save-detail">Review perubahan, lalu simpan.</div>
+    </div>
+    <button id="discardBtn">Discard</button>
+    <button id="floatingSaveBtn" class="primary big">Save Config</button>
+  </div>
 
   <script>
     const qs = new URLSearchParams(location.search);
     const adminKey = qs.get('api-key') || qs.get('api_key') || '';
     let config = null;
     let status = null;
+    let baselineConfigJSON = '';
+    let isHydrating = false;
 
     function withKey(path) {
       const sep = path.includes('?') ? '&' : '?';
@@ -274,6 +389,8 @@ const dashboardHTML = `<!doctype html>
       document.getElementById('rpcExample').value = location.origin + '/?api-key=' + firstClient;
       document.getElementById('restExample').value = location.origin + '/v1/wallet/<wallet>/balances?api-key=' + firstClient;
       renderKeyEditors();
+      baselineConfigJSON = stableStringify(collectConfig());
+      updateDirtyState();
     }
 
     function renderStatus() {
@@ -286,9 +403,10 @@ const dashboardHTML = `<!doctype html>
       rows.innerHTML = '';
       for (const key of status.keys || []) {
         const usage = key.usage || key.state?.usage;
-        const credits = usage ? escapeHtml((usage.creditsRemaining ?? '-') + ' remaining / ' + (usage.creditsUsed ?? '-') + ' used') : '<span class="muted">not loaded</span>';
-        const plan = usage?.subscriptionDetails?.plan ? '<div class="muted">' + escapeHtml(usage.subscriptionDetails.plan) + '</div>' : '';
-        const cycle = usage?.subscriptionDetails?.billingCycle ? '<div class="muted">' + escapeHtml(usage.subscriptionDetails.billingCycle.start || '') + ' - ' + escapeHtml(usage.subscriptionDetails.billingCycle.end || '') + '</div>' : '';
+        const credits = renderUsageSummary(usage);
+        const plan = usage?.subscriptionDetails?.plan ? '<div class="muted">' + escapeHtml(usage.subscriptionDetails.plan) + (usage.estimate ? ' estimate' : '') + '</div>' : '';
+        const cycle = usage?.subscriptionDetails?.billingCycle?.start || usage?.subscriptionDetails?.billingCycle?.end ? '<div class="muted">' + escapeHtml(usage.subscriptionDetails.billingCycle.start || '') + ' - ' + escapeHtml(usage.subscriptionDetails.billingCycle.end || '') + '</div>' : '';
+        const note = usage?.note ? '<div class="warn">' + escapeHtml(usage.note) + '</div>' : '';
         const state = key.state || {};
         const statusClass = key.available ? 'ok' : (key.enabled ? 'warn' : 'bad');
         const statusText = key.available ? 'available' : (key.enabled ? 'cooldown' : 'disabled');
@@ -298,7 +416,7 @@ const dashboardHTML = `<!doctype html>
           '<td class="mono">' + escapeHtml(key.api_key_masked || '') + '</td>' +
           '<td class="mono">' + escapeHtml(key.project_id || '') + '</td>' +
           '<td><span class="pill ' + statusClass + '">' + statusText + '</span>' + (key.cooldown_until ? '<div class="muted">until ' + escapeHtml(key.cooldown_until) + '</div>' : '') + '</td>' +
-          '<td>' + credits + plan + cycle + (state.usage_error ? '<div class="bad">' + escapeHtml(state.usage_error) + '</div>' : '') + '</td>' +
+          '<td>' + credits + plan + cycle + note + (state.usage_error ? '<div class="bad">' + escapeHtml(state.usage_error) + '</div>' : '') + '</td>' +
           '<td>' + (state.request_count || 0) + '<div class="muted">ok ' + (state.success_count || 0) + ' / fail ' + (state.failure_count || 0) + '</div></td>' +
           '<td>' + escapeHtml(state.last_error || '') + '</td>';
         rows.appendChild(tr);
@@ -322,8 +440,10 @@ const dashboardHTML = `<!doctype html>
         rows.appendChild(tr);
       }
       rows.querySelectorAll('[data-action="remove"]').forEach(btn => {
-        btn.addEventListener('click', () => btn.closest('tr').remove());
+        btn.addEventListener('click', () => { btn.closest('tr').remove(); updateDirtyState(); });
       });
+      rows.querySelectorAll('input').forEach(input => input.addEventListener('input', updateDirtyState));
+      rows.querySelectorAll('input[type="checkbox"]').forEach(input => input.addEventListener('change', updateDirtyState));
     }
 
     function collectConfig() {
@@ -376,6 +496,7 @@ const dashboardHTML = `<!doctype html>
       config = data.data;
       fillConfig();
       await loadStatusOnly();
+      updateDirtyState();
       setOutput(data);
     }
 
@@ -414,6 +535,65 @@ const dashboardHTML = `<!doctype html>
       document.getElementById('newProjectId').value = '';
       document.getElementById('newApiKey').value = '';
       renderKeyEditors();
+      updateDirtyState();
+    }
+
+    function renderUsageSummary(usage) {
+      if (!usage) return '<span class="muted">not loaded</span>';
+      const limit = usage.subscriptionDetails?.creditsLimit;
+      const used = usage.creditsUsed;
+      const remaining = usage.creditsRemaining;
+      if (usage.estimate) {
+        return '<span class="pill warn">Free plan limit ' + escapeHtml(formatNumber(limit || 1000000)) + ' credits/month</span><div class="muted">Used/remaining unavailable from Helius Admin API.</div>';
+      }
+      return escapeHtml(formatNumber(remaining ?? '-') + ' remaining / ' + formatNumber(used ?? '-') + ' used');
+    }
+
+    function formatNumber(value) {
+      if (typeof value !== 'number' || !isFinite(value) || value < 0) return '-';
+      return new Intl.NumberFormat().format(value);
+    }
+
+    function stableStringify(value) {
+      return JSON.stringify(sortValue(value));
+    }
+
+    function sortValue(value) {
+      if (Array.isArray(value)) return value.map(sortValue);
+      if (!value || typeof value !== 'object') return value;
+      return Object.keys(value).sort().reduce((acc, key) => {
+        acc[key] = sortValue(value[key]);
+        return acc;
+      }, {});
+    }
+
+    function updateDirtyState() {
+      if (!config || isHydrating) return;
+      const current = stableStringify(collectConfig());
+      const dirty = current !== baselineConfigJSON;
+      document.getElementById('saveBtn').disabled = !dirty;
+      document.getElementById('saveBtn').textContent = dirty ? 'Save Config' : 'Saved';
+      document.getElementById('floatingSaveBtn').disabled = !dirty;
+      document.getElementById('saveDock').classList.toggle('visible', dirty);
+      document.getElementById('configSection').classList.toggle('dirty-card', dirty);
+      document.getElementById('keysSection').classList.toggle('dirty-card', dirty);
+      document.getElementById('configDirtyBadge').classList.toggle('visible', dirty);
+      document.getElementById('keysDirtyBadge').classList.toggle('visible', dirty);
+      document.getElementById('saveDetail').textContent = dirty ? 'Klik Save Config untuk menulis ke config.yaml.' : 'Tidak ada perubahan.';
+    }
+
+    function watchFormChanges() {
+      document.querySelectorAll('input, textarea').forEach(el => {
+        if (el.disabled) return;
+        el.addEventListener('input', updateDirtyState);
+        el.addEventListener('change', updateDirtyState);
+      });
+    }
+
+    function discardChanges() {
+      if (!config) return;
+      fillConfig();
+      setOutput('Perubahan lokal dibatalkan. Config di server tidak diubah.');
     }
 
     function escapeHtml(value) {
@@ -425,7 +605,10 @@ const dashboardHTML = `<!doctype html>
     document.getElementById('usageBtn').addEventListener('click', refreshUsage);
     document.getElementById('testBtn').addEventListener('click', testRPC);
     document.getElementById('saveBtn').addEventListener('click', saveConfig);
+    document.getElementById('floatingSaveBtn').addEventListener('click', saveConfig);
+    document.getElementById('discardBtn').addEventListener('click', discardChanges);
     document.getElementById('addKeyBtn').addEventListener('click', addKey);
+    watchFormChanges();
 
     loadAll().catch(err => setOutput(String(err)));
   </script>
