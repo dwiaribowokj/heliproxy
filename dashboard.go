@@ -410,9 +410,9 @@ const dashboardHTML = `<!doctype html>
       for (const key of status.keys || []) {
         const usage = key.usage || key.state?.usage;
         const credits = renderUsageSummary(usage);
-        const plan = usage?.subscriptionDetails?.plan ? '<div class="muted">' + escapeHtml(usage.subscriptionDetails.plan) + (usage.estimate ? ' estimate' : '') + '</div>' : '';
+        const plan = usage?.subscriptionDetails?.plan && !usage.estimate ? '<div class="muted">' + escapeHtml(usage.subscriptionDetails.plan) + '</div>' : '';
         const cycle = usage?.subscriptionDetails?.billingCycle?.start || usage?.subscriptionDetails?.billingCycle?.end ? '<div class="muted">' + escapeHtml(usage.subscriptionDetails.billingCycle.start || '') + ' - ' + escapeHtml(usage.subscriptionDetails.billingCycle.end || '') + '</div>' : '';
-        const note = usage?.note ? '<div class="warn">' + escapeHtml(usage.note) + '</div>' : '';
+        const note = '';
         const state = key.state || {};
         const statusClass = key.available ? 'ok' : (key.enabled ? 'warn' : 'bad');
         const statusText = key.available ? 'available' : (key.enabled ? 'cooldown' : 'disabled');
@@ -552,7 +552,7 @@ const dashboardHTML = `<!doctype html>
       const used = usage.creditsUsed;
       const remaining = usage.creditsRemaining;
       if (usage.estimate) {
-        return '<span class="pill warn">Free plan limit ' + escapeHtml(formatNumber(limit || 1000000)) + ' credits/month</span><div class="muted">Used/remaining unavailable from Helius Admin API.</div>';
+        return '<span class="pill warn" title="Free plan limit: ' + escapeAttr(formatNumber(limit || 1000000)) + ' credits/month. Used/remaining unavailable from Helius Admin API.">Free · 1M/mo</span><div class="muted">usage n/a</div>';
       }
       return escapeHtml(formatNumber(remaining ?? '-') + ' remaining / ' + formatNumber(used ?? '-') + ' used');
     }
