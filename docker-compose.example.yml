@@ -1,0 +1,18 @@
+services:
+  heliproxy:
+    image: heliproxy:latest
+    build: .
+    container_name: heliproxy
+    restart: unless-stopped
+    ports:
+      - "18081:18081"
+    volumes:
+      - ./data:/app/data
+    environment:
+      # Used only on first run when ./data/config.yaml does not exist yet.
+      HELIPROXY_CLIENT_KEY: change-me-client-key
+      HELIPROXY_ADMIN_KEY: change-me-admin-key
+      HELIUS_API_KEYS: change-me-helius-key-1,change-me-helius-key-2
+      # Optional, comma-separated and index-aligned with HELIUS_API_KEYS.
+      # HELIUS_PROJECT_IDS: project-id-1,project-id-2
+      # HELIUS_KEY_NAMES: helius-1,helius-2

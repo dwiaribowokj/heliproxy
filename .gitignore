@@ -1,0 +1,25 @@
+# Runtime data and secrets
+data/
+*.yaml.local
+*.yml.local
+config.yaml
+config.*.yaml
+.env
+.env.*
+!.env.example
+
+# Logs and generated output
+*.log
+logs/
+tmp/
+coverage.out
+
+# Build artifacts
+heliproxy
+dist/
+bin/
+
+# OS/editor noise
+.DS_Store
+.idea/
+.vscode/
