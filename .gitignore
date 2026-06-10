@@ -4,6 +4,7 @@ data/
 *.yml.local
 config.yaml
 config.*.yaml
+!config.example.yaml
 .env
 .env.*
 !.env.example

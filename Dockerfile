@@ -16,7 +16,7 @@ RUN mkdir -p /app/data && chown -R appuser:appuser /app
 
 USER appuser
 ENV DATA_DIR=/app/data
-EXPOSE 18081
+EXPOSE 18081 18082
 VOLUME ["/app/data"]
 
 ENTRYPOINT ["/app/heliproxy"]

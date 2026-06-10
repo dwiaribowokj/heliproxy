@@ -280,6 +280,7 @@ const dashboardHTML = `<!doctype html>
       <div class="form-grid">
         <div><label>Listen Host</label><input id="serverHost"></div>
         <div><label>Listen Port</label><input id="serverPort" type="number" min="1" max="65535"></div>
+        <div><label>WebSocket Port</label><input id="serverWsPort" type="number" min="1" max="65535"></div>
         <div><label>Sticky Round-Robin Limit</label><input id="stickyLimit" type="number" min="1"></div>
         <div><label>Cooldown Seconds</label><input id="cooldownSeconds" type="number" min="1"></div>
         <div><label>Request Timeout Seconds</label><input id="timeoutSeconds" type="number" min="1"></div>
@@ -287,6 +288,7 @@ const dashboardHTML = `<!doctype html>
       </div>
       <div class="form-grid" style="margin-top:12px">
         <div><label>Helius RPC Base URL</label><input id="rpcBaseUrl"></div>
+        <div><label>Helius WS Base URL</label><input id="wsBaseUrl"></div>
         <div><label>Helius REST Base URL</label><input id="restBaseUrl"></div>
         <div><label>Helius Admin Base URL</label><input id="adminBaseUrl"></div>
       </div>
@@ -297,6 +299,7 @@ const dashboardHTML = `<!doctype html>
       </div>
       <div class="form-grid" style="margin-top:12px">
         <div><label>RPC URL Example</label><textarea id="rpcExample" disabled></textarea></div>
+        <div><label>WebSocket URL Example</label><textarea id="wsExample" disabled></textarea></div>
         <div><label>REST URL Example</label><textarea id="restExample" disabled></textarea></div>
       </div>
     </section>
@@ -375,11 +378,13 @@ const dashboardHTML = `<!doctype html>
       if (!config) return;
       document.getElementById('serverHost').value = config.server.host || '';
       document.getElementById('serverPort').value = config.server.port || '';
+      document.getElementById('serverWsPort').value = config.server.ws_port || 18082;
       document.getElementById('stickyLimit').value = config.routing.sticky_round_robin_limit || 1;
       document.getElementById('cooldownSeconds').value = config.routing.cooldown_seconds || 60;
       document.getElementById('timeoutSeconds').value = config.routing.request_timeout_seconds || 30;
       document.getElementById('maxBodyBytes').value = config.routing.max_body_bytes || 33554432;
       document.getElementById('rpcBaseUrl').value = config.helius.rpc_base_url || '';
+      document.getElementById('wsBaseUrl').value = config.helius.ws_base_url || '';
       document.getElementById('restBaseUrl').value = config.helius.rest_base_url || '';
       document.getElementById('adminBaseUrl').value = config.helius.admin_base_url || '';
       document.getElementById('configPath').value = config.meta.config_path || '';
@@ -387,6 +392,7 @@ const dashboardHTML = `<!doctype html>
       document.getElementById('adminKeys').value = (config.auth.admin_keys || []).join('\n');
       const firstClient = (config.auth.client_keys || [])[0] || '<client_key>';
       document.getElementById('rpcExample').value = location.origin + '/?api-key=' + firstClient;
+      document.getElementById('wsExample').value = 'ws://' + location.hostname + ':' + (config.server.ws_port || 18082) + '/?api-key=' + firstClient;
       document.getElementById('restExample').value = location.origin + '/v1/wallet/<wallet>/balances?api-key=' + firstClient;
       renderKeyEditors();
       baselineConfigJSON = stableStringify(collectConfig());
@@ -460,7 +466,8 @@ const dashboardHTML = `<!doctype html>
       return {
         server: {
           host: document.getElementById('serverHost').value.trim() || '0.0.0.0',
-          port: Number(document.getElementById('serverPort').value || 18081)
+          port: Number(document.getElementById('serverPort').value || 18081),
+          ws_port: Number(document.getElementById('serverWsPort').value || 18082)
         },
         auth: {
           client_keys: lines(document.getElementById('clientKeys').value),
@@ -468,6 +475,7 @@ const dashboardHTML = `<!doctype html>
         },
         helius: {
           rpc_base_url: document.getElementById('rpcBaseUrl').value.trim(),
+          ws_base_url: document.getElementById('wsBaseUrl').value.trim(),
           rest_base_url: document.getElementById('restBaseUrl').value.trim(),
           admin_base_url: document.getElementById('adminBaseUrl').value.trim(),
           keys

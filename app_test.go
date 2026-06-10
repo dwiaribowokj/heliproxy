@@ -8,6 +8,8 @@ import (
 	"strings"
 	"sync/atomic"
 	"testing"
+
+	"github.com/gorilla/websocket"
 )
 
 func TestRPCRequiresAPIKey(t *testing.T) {
@@ -141,6 +143,55 @@ func TestRESTForwardsHeliusCompatibleAPIKey(t *testing.T) {
 	}
 	if seenFoo != "bar" {
 		t.Fatalf("foo = %q, want bar", seenFoo)
+	}
+}
+
+func TestWebSocketForwardsHeliusCompatibleAPIKey(t *testing.T) {
+	var seenAPIKey string
+	upgrader := websocket.Upgrader{CheckOrigin: func(r *http.Request) bool { return true }}
+	upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		seenAPIKey = r.URL.Query().Get("api-key")
+		conn, err := upgrader.Upgrade(w, r, nil)
+		if err != nil {
+			t.Errorf("upgrade upstream: %v", err)
+			return
+		}
+		defer conn.Close()
+		messageType, payload, err := conn.ReadMessage()
+		if err != nil {
+			t.Errorf("read upstream: %v", err)
+			return
+		}
+		if err := conn.WriteMessage(messageType, payload); err != nil {
+			t.Errorf("write upstream: %v", err)
+		}
+	}))
+	defer upstream.Close()
+
+	cfg := testConfigWithKeys(1, 1)
+	cfg.Helius.WSBaseURL = "ws" + strings.TrimPrefix(upstream.URL, "http")
+	app := testApp(t, cfg)
+	server := httptest.NewServer(app.WSRoutes())
+	defer server.Close()
+
+	wsURL := "ws" + strings.TrimPrefix(server.URL, "http") + "/?api-key=client"
+	client, _, err := websocket.DefaultDialer.Dial(wsURL, nil)
+	if err != nil {
+		t.Fatalf("dial client: %v", err)
+	}
+	defer client.Close()
+	if err := client.WriteMessage(websocket.TextMessage, []byte(`{"jsonrpc":"2.0","id":1,"method":"slotSubscribe"}`)); err != nil {
+		t.Fatalf("write client: %v", err)
+	}
+	_, payload, err := client.ReadMessage()
+	if err != nil {
+		t.Fatalf("read client: %v", err)
+	}
+	if !strings.Contains(string(payload), "slotSubscribe") {
+		t.Fatalf("payload = %s", payload)
+	}
+	if seenAPIKey != "helius-1" {
+		t.Fatalf("upstream api-key = %q, want helius-1", seenAPIKey)
 	}
 }
 

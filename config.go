@@ -18,7 +18,9 @@ import (
 const (
 	defaultHost             = "0.0.0.0"
 	defaultPort             = 18081
+	defaultWSPort           = 18082
 	defaultRPCBaseURL       = "https://mainnet.helius-rpc.com/"
+	defaultWSBaseURL        = "wss://mainnet.helius-rpc.com/"
 	defaultRestBaseURL      = "https://api.helius.xyz"
 	defaultAdminBaseURL     = "https://admin-api.helius.xyz/v0"
 	defaultStickyLimit      = 3
@@ -39,8 +41,9 @@ type Config struct {
 }
 
 type ServerConfig struct {
-	Host string `yaml:"host" json:"host"`
-	Port int    `yaml:"port" json:"port"`
+	Host   string `yaml:"host" json:"host"`
+	Port   int    `yaml:"port" json:"port"`
+	WSPort int    `yaml:"ws_port" json:"ws_port"`
 }
 
 type AuthConfig struct {
@@ -50,6 +53,7 @@ type AuthConfig struct {
 
 type HeliusConfig struct {
 	RPCBaseURL   string      `yaml:"rpc_base_url" json:"rpc_base_url"`
+	WSBaseURL    string      `yaml:"ws_base_url" json:"ws_base_url"`
 	RestBaseURL  string      `yaml:"rest_base_url" json:"rest_base_url"`
 	AdminBaseURL string      `yaml:"admin_base_url" json:"admin_base_url"`
 	Keys         []HeliusKey `yaml:"keys" json:"keys"`
@@ -90,6 +94,7 @@ type PublicConfig struct {
 
 type PublicHeliusConfig struct {
 	RPCBaseURL   string            `json:"rpc_base_url"`
+	WSBaseURL    string            `json:"ws_base_url"`
 	RestBaseURL  string            `json:"rest_base_url"`
 	AdminBaseURL string            `json:"admin_base_url"`
 	Keys         []PublicHeliusKey `json:"keys"`
@@ -235,8 +240,9 @@ func defaultConfigFromEnv() (*Config, bool, error) {
 
 	cfg := &Config{
 		Server: ServerConfig{
-			Host: envString("HELIPROXY_HOST", defaultHost),
-			Port: envInt([]string{"HELIPROXY_PORT", "PORT"}, defaultPort),
+			Host:   envString("HELIPROXY_HOST", defaultHost),
+			Port:   envInt([]string{"HELIPROXY_PORT", "PORT"}, defaultPort),
+			WSPort: envInt([]string{"HELIPROXY_WS_PORT", "WS_PORT"}, defaultWSPort),
 		},
 		Auth: AuthConfig{
 			ClientKeys: clientKeys,
@@ -244,6 +250,7 @@ func defaultConfigFromEnv() (*Config, bool, error) {
 		},
 		Helius: HeliusConfig{
 			RPCBaseURL:   envString("HELIUS_RPC_URL", defaultRPCBaseURL),
+			WSBaseURL:    envString("HELIUS_WS_URL", defaultWSBaseURL),
 			RestBaseURL:  envString("HELIUS_REST_URL", defaultRestBaseURL),
 			AdminBaseURL: envString("HELIUS_ADMIN_URL", defaultAdminBaseURL),
 			Keys:         keys,
@@ -267,8 +274,14 @@ func applyConfigDefaults(cfg *Config) {
 	if cfg.Server.Port <= 0 {
 		cfg.Server.Port = defaultPort
 	}
+	if cfg.Server.WSPort <= 0 {
+		cfg.Server.WSPort = defaultWSPort
+	}
 	if strings.TrimSpace(cfg.Helius.RPCBaseURL) == "" {
 		cfg.Helius.RPCBaseURL = defaultRPCBaseURL
+	}
+	if strings.TrimSpace(cfg.Helius.WSBaseURL) == "" {
+		cfg.Helius.WSBaseURL = defaultWSBaseURL
 	}
 	if strings.TrimSpace(cfg.Helius.RestBaseURL) == "" {
 		cfg.Helius.RestBaseURL = defaultRestBaseURL
@@ -294,6 +307,7 @@ func normalizeConfig(cfg *Config) bool {
 	changed := false
 	cfg.Server.Host = strings.TrimSpace(cfg.Server.Host)
 	cfg.Helius.RPCBaseURL = strings.TrimSpace(cfg.Helius.RPCBaseURL)
+	cfg.Helius.WSBaseURL = strings.TrimSpace(cfg.Helius.WSBaseURL)
 	cfg.Helius.RestBaseURL = strings.TrimRight(strings.TrimSpace(cfg.Helius.RestBaseURL), "/")
 	cfg.Helius.AdminBaseURL = strings.TrimRight(strings.TrimSpace(cfg.Helius.AdminBaseURL), "/")
 	cfg.Auth.ClientKeys = compactUniqueStrings(cfg.Auth.ClientKeys)
@@ -340,6 +354,9 @@ func validateConfig(cfg *Config) error {
 	if cfg.Server.Port <= 0 || cfg.Server.Port > 65535 {
 		return fmt.Errorf("server.port must be between 1 and 65535")
 	}
+	if cfg.Server.WSPort <= 0 || cfg.Server.WSPort > 65535 {
+		return fmt.Errorf("server.ws_port must be between 1 and 65535")
+	}
 	if len(cfg.Auth.ClientKeys) == 0 {
 		return fmt.Errorf("auth.client_keys must contain at least one key")
 	}
@@ -348,6 +365,9 @@ func validateConfig(cfg *Config) error {
 	}
 	if _, err := url.ParseRequestURI(cfg.Helius.RPCBaseURL); err != nil {
 		return fmt.Errorf("helius.rpc_base_url is invalid: %w", err)
+	}
+	if _, err := url.ParseRequestURI(cfg.Helius.WSBaseURL); err != nil {
+		return fmt.Errorf("helius.ws_base_url is invalid: %w", err)
 	}
 	if _, err := url.ParseRequestURI(cfg.Helius.RestBaseURL); err != nil {
 		return fmt.Errorf("helius.rest_base_url is invalid: %w", err)
@@ -431,6 +451,7 @@ func publicConfig(cfg *Config, configPath string) PublicConfig {
 		Routing: cfg.Routing,
 		Helius: PublicHeliusConfig{
 			RPCBaseURL:   cfg.Helius.RPCBaseURL,
+			WSBaseURL:    cfg.Helius.WSBaseURL,
 			RestBaseURL:  cfg.Helius.RestBaseURL,
 			AdminBaseURL: cfg.Helius.AdminBaseURL,
 			Keys:         make([]PublicHeliusKey, 0, len(cfg.Helius.Keys)),

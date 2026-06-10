@@ -6,6 +6,7 @@ Heliproxy is a Helius-compatible proxy for Solana JSON-RPC and selected Helius R
 
 - Helius-style client auth with `?api-key=`.
 - JSON-RPC proxy on `POST /` and `POST /rpc`.
+- Solana WebSocket proxy on port `18082`.
 - Helius REST proxy for `/v1/...`, including wallet balance calls.
 - Sticky round-robin key rotation with failover.
 - Failover on network timeout, `401`, `403`, `408`, `429`, and `5xx` upstream responses.
@@ -28,6 +29,14 @@ REST calls keep the Helius path shape:
 ```bash
 curl -sS 'http://localhost:18081/v1/wallet/<wallet-address>/balances?api-key=<heliproxy-client-key>'
 ```
+
+Solana WebSocket clients connect to port `18082`:
+
+```text
+ws://localhost:18082/?api-key=<heliproxy-client-key>
+```
+
+`@solana/web3.js` automatically derives `ws://localhost:18082` when `RPC_URL` is `http://localhost:18081`, so most clients do not need a separate WebSocket setting.
 
 ## Repository Safety
 
@@ -76,7 +85,9 @@ These values are read only when the config file does not exist yet. After `confi
 | `HELIUS_KEY_NAME` / `HELIUS_KEY_NAMES` | Optional names for keys in dashboard/status |
 | `HELIPROXY_HOST` | Bind host, default `0.0.0.0` |
 | `HELIPROXY_PORT` / `PORT` | Listen port, default `18081` |
+| `HELIPROXY_WS_PORT` / `WS_PORT` | WebSocket listen port, default `18082` |
 | `HELIUS_RPC_URL` | Upstream RPC base URL, default `https://mainnet.helius-rpc.com/` |
+| `HELIUS_WS_URL` | Upstream WebSocket base URL, default `wss://mainnet.helius-rpc.com/` |
 | `HELIUS_REST_URL` | Upstream REST base URL, default `https://api.helius.xyz` |
 | `HELIUS_ADMIN_URL` | Admin API base URL, default `https://admin-api.helius.xyz/v0` |
 | `HELIPROXY_STICKY_LIMIT` | Requests per key before rotation, default `3` |
@@ -121,6 +132,7 @@ docker run -d \
   --name heliproxy \
   --restart unless-stopped \
   -p 18081:18081 \
+  -p 18082:18082 \
   -v "$PWD/data:/app/data" \
   -e HELIPROXY_CLIENT_KEY='change-me-client-key' \
   -e HELIPROXY_ADMIN_KEY='change-me-admin-key' \
@@ -138,6 +150,7 @@ docker run -d \
   --user "$(id -u):$(id -g)" \
   --restart unless-stopped \
   -p 18081:18081 \
+  -p 18082:18082 \
   -v "$PWD/data:/app/data" \
   -e HELIPROXY_CLIENT_KEY='change-me-client-key' \
   -e HELIPROXY_ADMIN_KEY='change-me-admin-key' \
@@ -176,6 +189,8 @@ Expected result:
 ```bash
 curl -sS 'http://localhost:18081/v1/wallet/11111111111111111111111111111111/balances?api-key=<heliproxy-client-key>'
 ```
+
+9. Test WebSocket with a Solana client. For `@solana/web3.js`, using `http://localhost:18081` as RPC automatically connects WebSocket subscriptions to `ws://localhost:18082`.
 
 ## Docker Compose Deploy
 
@@ -246,6 +261,8 @@ RPC_URL=http://localhost:18081/?api-key=<heliproxy-client-key>
 HELIUS_BASE_URL=http://localhost:18081
 HELIUS_API_KEY=<heliproxy-client-key>
 ```
+
+With `@solana/web3.js`, `RPC_URL=http://localhost:18081/...` derives WebSocket as `ws://localhost:18082/...`. Keep port `18082` exposed and listening.
 
 `user-config.json` example:
 
